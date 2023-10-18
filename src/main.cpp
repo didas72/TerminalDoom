@@ -14,9 +14,15 @@ char chFromFloat(double tone)
 	int index = (int)round(tone * 7.0f);
 	return chs[index];
 }
+char chFromInt(int i)
+{
+	return chs[i%7];
+}
 
 const double viewTan = 1.0; //90deg FOV
-const double colorPreScale = 50.0;
+const double colorPreScale = 25.0; //higher=dimmer
+const double width = 60;
+const double hWidth = width / 2;
 
 struct Point
 {
@@ -38,11 +44,20 @@ Point transformPoint(Point p, Camera c);
 Line transformLine(Line l, Camera c);
 //TODO: Point getForwards(Camera c);
 
+// -> Y
+//+----+
+//|    |
+//|    +--+
+//|  X     \.
+//+---------+
 Line walls[] = { 
-	{ { 1.2, -1.1 }, { 2.0, 0.1 } },
-	{ { 1.9, 0.3 }, { 0.9, 0.8 } },	
+	{ { +3.0, -3.0 }, { +3.0, +1.0 } }, //Top wall
+	{ { +3.0, -3.0 }, { -1.0, -3.0 } }, //Left wall
+	{ { -1.0, -3.0 }, { -1.0, +7.0 } }, //Bottom wall
+	{ { +1.0, +5.0 }, { -1.0, +7.0 } }, //Diagonal wall
+	{ { +1.0, +2.0 }, { +1.0, +5.0 } }, //Right top wall
+	{ { +3.0, +2.0 }, { +1.0, +2.0 } }, //Top right wall
 };
-
 
 
 int main()
@@ -52,10 +67,10 @@ int main()
 	while (1)
 	{
 		render(cam);
-		cam.rotation += 0.05;
+		cam.rotation += 0.025;
 		printf("Rotation: %f\n", cam.rotation);
 
-		usleep(100 * 1000);
+		usleep(50 * 1000);
 	}
 }
 
@@ -63,12 +78,12 @@ int main()
 void render(Camera c)
 {
 	system("clear");
-	for (int y = 0; y < 40; y++)
+	for (int y = 0; y < width; y++)
 	{
-		for (int x = 0; x < 40; x++)
+		for (int x = 0; x < width; x++)
 		{
 			char ch;
-			Point p = { .x = (x-20) / 20.0, .y= (20-y) / 20.0 };
+			Point p = { .x = (x-hWidth) / hWidth, .y= (hWidth-y) / hWidth };
 			ch = renderPoint(p, c);
 			printf("%c%c", ch, ch);
 		}
@@ -85,6 +100,7 @@ char renderPoint(Point p, Camera c)
 	//v = point height (normally z)
 
 	double lowestD = 10000.0;
+	int lowestD_i = -1;
 	size_t wallCount = sizeof(walls) / sizeof(Line);
 
 	for (size_t i = 0; i < wallCount; i++)
@@ -132,9 +148,13 @@ char renderPoint(Point p, Camera c)
 
 		//Set if closer
 		if (d < lowestD)
+		{
 			lowestD = d;
+			lowestD_i = i;
+		}
 	}
 
+	//return chFromInt(lowestD_i + 1);
 	return chFromFloat(7.0 - log2(lowestD));
 }
 
