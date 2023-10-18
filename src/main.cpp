@@ -4,6 +4,9 @@
 #include <cstdlib>
 #include <cmath>
 #include <unistd.h>
+#include <string>
+
+#include "colors.hpp"
 
 
 
@@ -20,7 +23,8 @@ char chFromInt(int i)
 }
 
 const double viewTan = 1.0; //90deg FOV
-const double colorPreScale = 25.0; //higher=dimmer
+//const double colorPreScale = 1.75/1.0; //higher=dimmer
+const double colorPreScale = 25.0;
 const double width = 60;
 const double hWidth = width / 2;
 
@@ -39,7 +43,8 @@ struct Camera
 };
 
 void render(Camera c);
-char renderPoint(Point p, Camera c);
+std::string renderPoint(Point p, Camera c);
+std::string chToStr(char ch, Color c = Color::Black);
 Point transformPoint(Point p, Camera c);
 Line transformLine(Line l, Camera c);
 //TODO: Point getForwards(Camera c);
@@ -51,7 +56,7 @@ Line transformLine(Line l, Camera c);
 //|  X     \.
 //+---------+
 Line walls[] = { 
-	{ { +3.0, -3.0 }, { +3.0, +1.0 } }, //Top wall
+	{ { +3.0, -3.0 }, { +3.0, +2.0 } }, //Top wall
 	{ { +3.0, -3.0 }, { -1.0, -3.0 } }, //Left wall
 	{ { -1.0, -3.0 }, { -1.0, +7.0 } }, //Bottom wall
 	{ { +1.0, +5.0 }, { -1.0, +7.0 } }, //Diagonal wall
@@ -67,10 +72,10 @@ int main()
 	while (1)
 	{
 		render(cam);
-		cam.rotation += 0.025;
-		printf("Rotation: %f\n", cam.rotation);
+		cam.rotation += 0.05;
+		putchar('\n');
 
-		usleep(50 * 1000);
+		usleep(75 * 1000);
 	}
 }
 
@@ -82,15 +87,15 @@ void render(Camera c)
 	{
 		for (int x = 0; x < width; x++)
 		{
-			char ch;
+			std::string str;
 			Point p = { .x = (x-hWidth) / hWidth, .y= (hWidth-y) / hWidth };
-			ch = renderPoint(p, c);
-			printf("%c%c", ch, ch);
+			str = renderPoint(p, c);
+			printf("%s%s", str.c_str(), str.c_str());
 		}
 	}
 }
 
-char renderPoint(Point p, Camera c)
+std::string renderPoint(Point p, Camera c)
 {
 	//coordinates:
 	//x = screen horizontal [-1,1]
@@ -150,12 +155,20 @@ char renderPoint(Point p, Camera c)
 		if (d < lowestD)
 		{
 			lowestD = d;
-			lowestD_i = i;
+			lowestD_i = i + 1;
 		}
 	}
 
-	//return chFromInt(lowestD_i + 1);
-	return chFromFloat(7.0 - log2(lowestD));
+	char ch;
+	//ch = chFromInt(lowestD_i + 1);
+	ch = chFromFloat(7.0 - log2(lowestD));
+	//ch = chFromFloat(7.0 - lowestD);
+	return chToStr(ch, (Color)lowestD_i);
+}
+
+std::string chToStr(char ch, Color c)
+{
+	return getColorStr(c) + std::string(1, ch) + COLOR_RESET;
 }
 
 Point transformPoint(Point p, Camera c)

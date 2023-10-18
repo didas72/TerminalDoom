@@ -18,6 +18,7 @@ TOBJS=$(patsubst $(TEST)/%.cpp, $(OBJ)/tests/%.o, $(TSRCS))
 
 
 .PHONY: all
+.PHONY: run
 .PHONY: build
 .PHONY: build-tests
 .PHONY: release
@@ -35,6 +36,10 @@ release: C_FLAGS=-Wall -Wextra -Wno-unknown-pragmas -std=c++20 -O2
 release: clean
 release: $(OUTBIN)
 
+
+
+run: $(OUTBIN)
+	$(OUTBIN)
 
 
 $(OUTBIN): $(OBJS)
